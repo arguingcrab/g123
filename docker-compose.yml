@@ -1,0 +1,43 @@
+version: "1"
+services:
+    app:
+        image: app
+        build:
+            dockerfile: Dockerfile
+            context: .
+        ports:
+            - 5000:5000
+        environment:
+            - GUNICORN_WORKER_NUM=1
+        restart: always
+    db:
+        image: mysql
+        # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
+        # (this is just an example, not intended to be a production configuration)
+        command: --default-authentication-plugin=mysql_native_password
+        restart: always
+        volumes: 
+            - ./:/docker-entrypoint-initdb.d
+        environment:
+            MYSQL_ROOT_USER: root
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_DATABASE: dev
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'pass'
+            MYSQL_ROOT_HOST: '%'
+        ports:
+            - 3306:3306
+          
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 8080:8080
+        links: 
+            - db
+            
+networks:
+    network:
+        ipam:
+            config:
+                - subnet: 172.17.0.0/16
